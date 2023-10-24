@@ -68,7 +68,7 @@ class UndoManager {
 
 // Un Classe SaveLineCommande qui implemente command
 class  SaveCommand extends command{
-
+ 
     constructor(line, dessin){
         super()
         this.line = line
@@ -79,7 +79,7 @@ class  SaveCommand extends command{
     }
 
     undo(){
-        this.dessin.remove(this.line)
+        this.dessin.remove()
     }
 
 }
