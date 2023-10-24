@@ -17,7 +17,6 @@ class UndoManager {
     }
 
     executeCommand(command){
-        
         try {
             command.execute();
             this.undoStack.push(command);
@@ -63,7 +62,6 @@ class UndoManager {
         undoButton.disabled = !this.canUndo();
         redoButton.disabled = !this.canRedo();
     }
-
 }
 
 // Un Classe SaveLineCommande qui implemente command
@@ -79,7 +77,7 @@ class  SaveCommand extends command{
     }
 
     undo(){
-        this.dessin.remove()
+        this.line.remove()
     }
 
 }
