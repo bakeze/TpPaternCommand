@@ -2,6 +2,88 @@ import Stack from './stack';
 import Konva from "konva";
 import { createMachine, interpret } from "xstate";
 
+class command {
+    execute() {};
+    undo() {};
+}
+
+
+// Notre Classe UndoManager nous permettant de Faire et Défaire 
+class UndoManager {
+
+    constructor() {
+        this.undoStack = new Stack();
+        this.redoStack = new Stack();
+    }
+
+    executeCommand(command){
+        
+        try {
+            command.execute();
+            this.undoStack.push(command);
+            this.miseAjourUndoRedoButton()
+            
+        } catch (error) {
+            console.log("Erreur 404" + e)
+        }
+      
+    }
+
+    undo(){
+        if (this.canUndo()) {
+            const command = this.undoStack.pop()
+            command.undo();
+            this.redoStack.push(command);
+            this.miseAjourUndoRedoButton();
+        }
+
+    }
+
+    redo(){
+        if (this.canRedo()) {
+            const command = this.redoStack.pop()
+            command.execute();
+            this.undoStack.push(command);
+            this.miseAjourUndoRedoButton();
+        }
+
+    }
+    //Je verifie que le stack undo n'es pas vide avant de faire un Undo 
+    canUndo(){
+        return !this.undoStack.isEmpty()
+    }
+
+    // on verifie que le Stack redo n'est lui aussi pas vis avant de faire un REDO 
+    canRedo(){
+      return !this.redoStack.isEmpty()
+    }
+   
+
+    miseAjourUndoRedoButton(){
+        undoButton.disabled = !this.canUndo();
+        redoButton.disabled = !this.canRedo();
+    }
+
+}
+
+// Un Classe SaveLineCommande qui implemente command
+class  SaveCommand extends command{
+
+    constructor(line, dessin){
+        super()
+        this.line = line
+        this.dessin = dessin
+    }
+    execute(){
+        this.dessin.add(this.line)
+    }
+
+    undo(){
+        this.dessin.remove(this.line)
+    }
+
+}
+ 
 const stage = new Konva.Stage({
     container: "container",
     width: 400,
@@ -119,7 +201,9 @@ const polylineMachine = createMachine(
                 polyline.points(newPoints);
                 polyline.stroke("black"); // On change la couleur
                 // On sauvegarde la polyline dans la couche de dessin
-                dessin.add(polyline); // On l'ajoute à la couche de dessin
+               // dessin.add(polyline);  On l'ajoute à la couche de dessin
+                //on utilise le UndoManager pour gerer l'enregistrement d'une Ligne
+                undoManager.executeCommand(new SaveCommand(polyline, dessin));
             },
             addPoint: (context, event) => {
                 const pos = stage.getPointerPosition();
@@ -171,3 +255,19 @@ window.addEventListener("keydown", (event) => {
     console.log("Key pressed:", event.key);
     polylineService.send(event.key);
 });
+
+
+// déclaration des Constantes 
+const undoButton = document.getElementById("undo");
+const redoButton = document.getElementById("redo");
+const undoManager = new UndoManager();
+
+
+undoButton.addEventListener("click", () => {
+    undoManager.undo();
+})
+
+
+redoButton.addEventListener("click", () => {
+    undoManager.redo();
+})
